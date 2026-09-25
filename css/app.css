@@ -142,12 +142,12 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
 
 .always-top{
   position:absolute;top:0;left:0;right:0;
-  height:76px;                              /* taller to fit the 45px logo */
+  height:76px;
   display:flex;align-items:center;
   padding:0 20px;gap:14px;
 }
 #brandLogo{
-  width:45px;height:45px;border-radius:50%; /* was 34px — now 45px */
+  width:45px;height:45px;border-radius:50%;
   object-fit:cover;
   flex-shrink:0;
   -webkit-user-drag:none;
@@ -249,6 +249,7 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
   pointer-events:none;
   z-index:20;
   border-top:1px solid rgba(255,255,255,.06);
+  padding-left:12px;                /* ← text starts AFTER the 6px red bar */
 }
 #fullTicker::before{
   content:"";
@@ -333,8 +334,8 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
 /* ── MOBILE ── */
 @media (max-width:600px){
   :root{ --ticker-h: 22px; --botbar-h: 32px; --cluster-push: 14px; }
-  #brandLogo{width:38px;height:38px}          /* bigger on mobile too */
-  .always-top{height:68px;padding:0 14px}     /* taller header row */
+  #brandLogo{width:38px;height:38px}
+  .always-top{height:68px;padding:0 14px}
   .brand{font-size:14px}
   .clock{font-size:12px}
   #broadcast{ width:86%; left:12px }
@@ -344,5 +345,5 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
   .bn-logo{ font-size:10px; padding:0 10px }
   .bn-ticker-item{ font-size:10px }
   #controlCluster{ left:12px }
-  #fullTicker{ left:12px }
+  #fullTicker{ left:12px; padding-left:11px }   /* scaled for mobile: 5px bar + 6px gap */
 }
