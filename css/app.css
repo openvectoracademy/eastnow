@@ -142,19 +142,19 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
 
 .always-top{
   position:absolute;top:0;left:0;right:0;
-  height:64px;
+  height:76px;                              /* taller to fit the 45px logo */
   display:flex;align-items:center;
-  padding:0 20px;gap:12px;
+  padding:0 20px;gap:14px;
 }
 #brandLogo{
-  width:34px;height:34px;border-radius:50%;
+  width:45px;height:45px;border-radius:50%; /* was 34px — now 45px */
   object-fit:cover;
   flex-shrink:0;
   -webkit-user-drag:none;
   user-select:none;
   pointer-events:none;
 }
-.brand{font-size:14px;font-weight:700;letter-spacing:.06em;color:#fff}
+.brand{font-size:15px;font-weight:700;letter-spacing:.06em;color:#fff}
 .live-badge{
   display:inline-flex;align-items:center;gap:5px;
   background:#d93025;color:#fff;
@@ -253,7 +253,7 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
 #fullTicker::before{
   content:"";
   position:absolute;left:0;top:0;bottom:0;
-  width:6px;                    /* ← 6px to match headline + sub-headline */
+  width:6px;
   background:#D32F2F;
 }
 .bn-ticker-track{
@@ -333,8 +333,9 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
 /* ── MOBILE ── */
 @media (max-width:600px){
   :root{ --ticker-h: 22px; --botbar-h: 32px; --cluster-push: 14px; }
-  #brandLogo{width:30px;height:30px}
-  .brand{font-size:13px}
+  #brandLogo{width:38px;height:38px}          /* bigger on mobile too */
+  .always-top{height:68px;padding:0 14px}     /* taller header row */
+  .brand{font-size:14px}
   .clock{font-size:12px}
   #broadcast{ width:86%; left:12px }
   .bn-headline{ font-size:12px }
@@ -342,7 +343,6 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
   .bn-badge{ font-size:10px; padding:4px 10px 3px }
   .bn-logo{ font-size:10px; padding:0 10px }
   .bn-ticker-item{ font-size:10px }
-  .always-top{ padding:0 14px; height:56px }
   #controlCluster{ left:12px }
   #fullTicker{ left:12px }
 }
