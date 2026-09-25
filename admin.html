@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#000000" />
+<title>EAST NOW — Admin</title>
+<link rel="icon" href="images/eastnow.png" />
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet" />
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:#000;color:#e8eaed;font-family:'Roboto',sans-serif;min-height:100vh}
+  a{color:#8ab4f8;text-decoration:none}
+  button{font-family:inherit;cursor:pointer}
+
+  .top{
+    display:flex;align-items:center;gap:12px;
+    padding:14px 20px;border-bottom:1px solid #1f1f1f;
+    background:#000;position:sticky;top:0;z-index:100;
+  }
+  .top img{width:26px;height:26px;border-radius:50%;object-fit:cover;-webkit-user-drag:none;user-select:none;pointer-events:none}
+  .top h1{font-size:14px;font-weight:700;letter-spacing:.06em}
+  .top .spacer{flex:1}
+  .top .logout{
+    background:#1f1f1f;border:1px solid #333;color:#e8eaed;
+    padding:6px 12px;border-radius:4px;font-size:12px;
+  }
+  .top .logout:hover{background:#2a2a2a}
+
+  .wrap{max-width:960px;margin:0 auto;padding:24px 16px 60px}
+
+  /* AUTH SCREENS */
+  .auth-card{
+    max-width:360px;margin:80px auto;
+    background:#0a0a0a;border:1px solid #1f1f1f;border-radius:10px;
+    padding:28px 24px;
+  }
+  .auth-card h2{font-size:16px;font-weight:700;margin-bottom:6px;letter-spacing:.02em}
+  .auth-card p.sub{font-size:12px;color:#9aa0a6;margin-bottom:20px;line-height:1.5}
+  .auth-card label{display:block;font-size:11px;color:#9aa0a6;margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase}
+  .auth-card input{
+    width:100%;background:#000;border:1px solid #2a2a2a;color:#fff;
+    padding:10px 12px;border-radius:6px;font-size:14px;margin-bottom:14px;
+    font-family:inherit;
+  }
+  .auth-card input:focus{outline:none;border-color:#1a73e8}
+  .auth-card button.primary{
+    width:100%;background:#1a73e8;color:#fff;border:none;
+    padding:11px;border-radius:6px;font-size:14px;font-weight:600;
+    letter-spacing:.02em;
+  }
+  .auth-card button.primary:hover{background:#1557b0}
+  .auth-card .err{color:#f28b82;font-size:12px;margin-bottom:12px;display:none}
+  .auth-card .err.on{display:block}
+
+  /* TABS */
+  .tabs{display:flex;gap:2px;border-bottom:1px solid #1f1f1f;margin-bottom:20px}
+  .tab{
+    background:transparent;border:none;color:#9aa0a6;
+    padding:12px 16px;font-size:13px;font-weight:500;
+    border-bottom:2px solid transparent;
+  }
+  .tab:hover{color:#fff}
+  .tab.active{color:#8ab4f8;border-bottom-color:#1a73e8}
+
+  .panel{display:none}
+  .panel.active{display:block}
+
+  /* FORMS */
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:11px;color:#9aa0a6;margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase}
+  .field input,.field select,.field textarea{
+    width:100%;background:#0a0a0a;border:1px solid #2a2a2a;color:#fff;
+    padding:10px 12px;border-radius:6px;font-size:14px;font-family:inherit;
+  }
+  .field textarea{min-height:100px;resize:vertical;line-height:1.5}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:#1a73e8}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .row.three{grid-template-columns:1fr 1fr 1fr}
+  @media(max-width:600px){.row,.row.three{grid-template-columns:1fr}}
+
+  button.primary{
+    background:#1a73e8;color:#fff;border:none;
+    padding:10px 18px;border-radius:6px;font-size:13px;font-weight:600;
+    letter-spacing:.02em;
+  }
+  button.primary:hover{background:#1557b0}
+  button.ghost{
+    background:transparent;color:#e8eaed;border:1px solid #2a2a2a;
+    padding:8px 14px;border-radius:6px;font-size:12px;font-weight:500;
+  }
+  button.ghost:hover{background:#1a1a1a}
+  button.danger{
+    background:transparent;color:#f28b82;border:1px solid #5c1f1f;
+    padding:6px 10px;border-radius:4px;font-size:12px;
+  }
+  button.danger:hover{background:#2a0f0f}
+
+  /* LIST */
+  .list{margin-top:20px;border:1px solid #1f1f1f;border-radius:8px;overflow:hidden}
+  .item{
+    display:grid;grid-template-columns:36px 1fr auto;gap:12px;align-items:center;
+    padding:12px 14px;border-bottom:1px solid #1a1a1a;
+  }
+  .item:last-child{border-bottom:none}
+  .item .ord{
+    font-size:11px;color:#9aa0a6;font-variant-numeric:tabular-nums;
+    text-align:center;font-weight:600;
+  }
+  .item .info{min-width:0}
+  .item .info .t{font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .item .info .m{font-size:11px;color:#9aa0a6;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .item .actions{display:flex;gap:6px}
+
+  .empty{padding:40px 20px;text-align:center;color:#9aa0a6;font-size:13px}
+
+  /* TOAST */
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translate(-50%, 80px);
+    background:#1a73e8;color:#fff;padding:12px 22px;border-radius:8px;
+    font-size:13px;font-weight:500;opacity:0;transition:all .3s;
+    pointer-events:none;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.5);
+    max-width:90vw;
+  }
+  .toast.show{opacity:1;transform:translate(-50%, 0)}
+  .toast.err{background:#d93025}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <img src="images/eastnow.png" alt="EAST NOW" draggable="false" />
+  <h1>EAST NOW — Admin</h1>
+  <div class="spacer"></div>
+  <button class="logout" id="logoutBtn" style="display:none">Log out</button>
+</div>
+
+<!-- ═══ SETUP / LOGIN ═══ -->
+<div id="authScreen" class="wrap">
+  <div class="auth-card" id="setupCard" style="display:none">
+    <h2>Create admin account</h2>
+    <p class="sub">First-time setup. This account will be stored in your D1 database.</p>
+    <div class="err" id="setupErr"></div>
+    <label>Username</label>
+    <input id="setupUser" autocomplete="username" />
+    <label>Password</label>
+    <input id="setupPass" type="password" autocomplete="new-password" />
+    <button class="primary" id="setupBtn">Create account</button>
+  </div>
+
+  <div class="auth-card" id="loginCard" style="display:none">
+    <h2>Admin login</h2>
+    <p class="sub">Enter your username and password to continue.</p>
+    <div class="err" id="loginErr"></div>
+    <label>Username</label>
+    <input id="loginUser" autocomplete="username" />
+    <label>Password</label>
+    <input id="loginPass" type="password" autocomplete="current-password" />
+    <button class="primary" id="loginBtn">Log in</button>
+  </div>
+</div>
+
+<!-- ═══ MAIN ADMIN ═══ -->
+<div id="mainScreen" class="wrap" style="display:none">
+  <div class="tabs">
+    <button class="tab active" data-tab="schedule">Schedule</button>
+    <button class="tab" data-tab="control">Live Control</button>
+    <button class="tab" data-tab="override">Override</button>
+  </div>
+
+  <!-- SCHEDULE -->
+  <div class="panel active" id="panel-schedule">
+    <div class="row three">
+      <div class="field"><label>Type</label>
+        <select id="sType"><option value="youtube">YouTube video</option><option value="image">Image URL</option></select>
+      </div>
+      <div class="field"><label>Media ref (YT ID or image URL)</label>
+        <input id="sRef" placeholder="dQw4w9WgXcQ or https://..." />
+      </div>
+      <div class="field"><label>Duration (seconds)</label>
+        <input id="sDur" type="number" min="1" placeholder="60" />
+      </div>
+    </div>
+    <div class="row three">
+      <div class="field"><label>Title</label><input id="sTitle" placeholder="News segment" /></div>
+      <div class="field"><label>Source</label><input id="sSource" placeholder="EAST NOW" /></div>
+      <div class="field"><label>Tag</label>
+        <select id="sTag">
+          <option>FEATURED</option><option>LIVE</option><option>RECORDED</option>
+          <option>BREAKING</option><option>AD</option>
+        </select>
+      </div>
+    </div>
+    <button class="primary" id="addBtn">Add to schedule</button>
+
+    <div class="list" id="scheduleList">
+      <div class="empty">Loading…</div>
+    </div>
+  </div>
+
+  <!-- LIVE CONTROL -->
+  <div class="panel" id="panel-control">
+    <div class="field"><label>Breaking tag (red badge)</label>
+      <input id="cTag" placeholder="BREAKING NEWS" />
+    </div>
+    <div class="field"><label>Headline (white banner)</label>
+      <input id="cHeadline" placeholder="Headline text" />
+    </div>
+    <div class="field"><label>Subheadline / Channel badge</label>
+      <input id="cSub" placeholder="EAST NOW" />
+    </div>
+    <div class="field"><label>Ticker lines (one per line)</label>
+      <textarea id="cTicker" placeholder="Line 1&#10;Line 2"></textarea>
+    </div>
+    <button class="primary" id="saveControlBtn">Save</button>
+  </div>
+
+  <!-- OVERRIDE -->
+  <div class="panel" id="panel-override">
+    <p style="font-size:12px;color:#9aa0a6;margin-bottom:14px;line-height:1.6">
+      Force-play a video on all viewers within ~3-5 seconds. Clearing the override returns everyone to the normal loop.
+    </p>
+    <div class="row">
+      <div class="field"><label>YouTube video ID</label><input id="oRef" placeholder="dQw4w9WgXcQ" /></div>
+      <div class="field"><label>Override title</label><input id="oTitle" placeholder="Breaking special" /></div>
+    </div>
+    <button class="primary" id="setOverrideBtn">Force play now</button>
+    <button class="ghost" id="clearOverrideBtn" style="margin-left:8px">Clear override</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  let TOKEN = sessionStorage.getItem('eastnow_admin_token') || '';
+
+  function toast(msg, isErr) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.toggle('err', !!isErr);
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2400);
+  }
+
+  async function api(path, opts = {}) {
+    opts.headers = opts.headers || {};
+    opts.headers['content-type'] = 'application/json';
+    if (TOKEN) opts.headers['x-admin-token'] = TOKEN;
+    if (opts.body && typeof opts.body !== 'string') opts.body = JSON.stringify(opts.body);
+    const r = await fetch('/api/' + path, opts);
+    let d = null;
+    try { d = await r.json(); } catch (_) {}
+    if (!r.ok) throw new Error((d && d.error) || ('HTTP ' + r.status));
+    return d;
+  }
+
+  /* ══ SCREEN SWITCHING ══ */
+  function showSetup()  { $('authScreen').style.display = 'block'; $('setupCard').style.display = 'block'; $('loginCard').style.display = 'none'; $('mainScreen').style.display = 'none'; }
+  function showLogin()  { $('authScreen').style.display = 'block'; $('setupCard').style.display = 'none'; $('loginCard').style.display = 'block'; $('mainScreen').style.display = 'none'; }
+  function showMain()   { $('authScreen').style.display = 'none'; $('mainScreen').style.display = 'block'; $('logoutBtn').style.display = 'inline-block'; }
+
+  async function checkStatus() {
+    try {
+      const r = await fetch('/api/admin/status');
+      const d = await r.json();
+      if (d.setupRequired) { showSetup(); return; }
+      if (TOKEN) {
+        try {
+          await api('admin/schedule');  // verify token works
+          showMain();
+          loadAll();
+          return;
+        } catch (_) {
+          sessionStorage.removeItem('eastnow_admin_token');
+          TOKEN = '';
+        }
+      }
+      showLogin();
+    } catch (e) {
+      toast('Cannot reach server: ' + e.message, true);
+      showLogin();
+    }
+  }
+
+  /* ══ SETUP ══ */
+  $('setupBtn').addEventListener('click', async () => {
+    const username = $('setupUser').value.trim();
+    const password = $('setupPass').value;
+    $('setupErr').classList.remove('on');
+    try {
+      const d = await api('admin/setup', { method: 'POST', body: { username, password } });
+      TOKEN = d.token;
+      sessionStorage.setItem('eastnow_admin_token', TOKEN);
+      toast('Account created');
+      showMain();
+      loadAll();
+    } catch (e) {
+      $('setupErr').textContent = e.message;
+      $('setupErr').classList.add('on');
+    }
+  });
+
+  /* ══ LOGIN ══ */
+  $('loginBtn').addEventListener('click', async () => {
+    const username = $('loginUser').value.trim();
+    const password = $('loginPass').value;
+    $('loginErr').classList.remove('on');
+    try {
+      const d = await api('admin/login', { method: 'POST', body: { username, password } });
+      TOKEN = d.token;
+      sessionStorage.setItem('eastnow_admin_token', TOKEN);
+      toast('Welcome back');
+      showMain();
+      loadAll();
+    } catch (e) {
+      $('loginErr').textContent = e.message;
+      $('loginErr').classList.add('on');
+    }
+  });
+
+  $('logoutBtn').addEventListener('click', async () => {
+    try { await api('admin/logout', { method: 'POST' }); } catch (_) {}
+    sessionStorage.removeItem('eastnow_admin_token');
+    TOKEN = '';
+    showLogin();
+  });
+
+  /* ══ TABS ══ */
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      $('panel-' + t.dataset.tab).classList.add('active');
+    });
+  });
+
+  /* ══ SCHEDULE ══ */
+  async function loadSchedule() {
+    const list = $('scheduleList');
+    list.innerHTML = '<div class="empty">Loading…</div>';
+    try {
+      const d = await api('admin/schedule');
+      if (!d.items || !d.items.length) {
+        list.innerHTML = '<div class="empty">No items yet. Add your first video above.</div>';
+        return;
+      }
+      list.innerHTML = '';
+      d.items.forEach(it => {
+        const row = document.createElement('div');
+        row.className = 'item';
+        const ref = it.type === 'image' ? it.media_ref : it.media_ref;
+        row.innerHTML = `
+          <div class="ord">${it.order_index}</div>
+          <div class="info">
+            <div class="t">${escapeHtml(it.title)}</div>
+            <div class="m">${it.type.toUpperCase()} • ${escapeHtml(ref)} • ${it.duration_seconds}s • ${escapeHtml(it.show_tag || '')}</div>
+          </div>
+          <div class="actions">
+            <button class="ghost" data-act="edit" data-id="${it.id}">Edit</button>
+            <button class="danger" data-act="del" data-id="${it.id}">Delete</button>
+          </div>
+        `;
+        list.appendChild(row);
+      });
+      list.querySelectorAll('[data-act="del"]').forEach(b => {
+        b.addEventListener('click', async () => {
+          if (!confirm('Delete this item?')) return;
+          try { await api('admin/schedule/' + b.dataset.id, { method: 'DELETE' }); toast('Deleted'); loadSchedule(); }
+          catch (e) { toast(e.message, true); }
+        });
+      });
+      list.querySelectorAll('[data-act="edit"]').forEach(b => {
+        b.addEventListener('click', () => {
+          const it = d.items.find(x => String(x.id) === String(b.dataset.id));
+          if (!it) return;
+          $('sType').value = it.type;
+          $('sRef').value = it.media_ref;
+          $('sTitle').value = it.title;
+          $('sSource').value = it.source;
+          $('sTag').value = it.show_tag;
+          $('sDur').value = it.duration_seconds;
+          $('addBtn').textContent = 'Save changes';
+          $('addBtn').dataset.editId = it.id;
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      });
+    } catch (e) {
+      list.innerHTML = '<div class="empty">Error: ' + escapeHtml(e.message) + '</div>';
+    }
+  }
+
+  $('addBtn').addEventListener('click', async () => {
+    const body = {
+      type: $('sType').value,
+      media_ref: $('sRef').value.trim(),
+      title: $('sTitle').value.trim(),
+      source: $('sSource').value.trim() || 'EAST NOW',
+      show_tag: $('sTag').value,
+      duration_seconds: parseInt($('sDur').value, 10),
+    };
+    if (!body.media_ref || !body.title || !body.duration_seconds) {
+      toast('Fill media ref, title, and duration', true);
+      return;
+    }
+    try {
+      const editId = $('addBtn').dataset.editId;
+      if (editId) {
+        await api('admin/schedule/' + editId, { method: 'PUT', body });
+        toast('Updated');
+        delete $('addBtn').dataset.editId;
+        $('addBtn').textContent = 'Add to schedule';
+      } else {
+        await api('admin/schedule', { method: 'POST', body });
+        toast('Added');
+      }
+      $('sRef').value = ''; $('sTitle').value = ''; $('sDur').value = ''; $('sSource').value = '';
+      loadSchedule();
+    } catch (e) { toast(e.message, true); }
+  });
+
+  /* ══ LIVE CONTROL ══ */
+  async function loadControl() {
+    try {
+      const r = await fetch('/api/live', { cache: 'no-store' });
+      const d = await r.json();
+      $('cTag').value = d.breaking_tag || '';
+      $('cHeadline').value = d.headline || '';
+      $('cSub').value = d.subheadline || '';
+      $('cTicker').value = (d.ticker || []).join('\n');
+    } catch (e) { toast(e.message, true); }
+  }
+
+  $('saveControlBtn').addEventListener('click', async () => {
+    const ticker = $('cTicker').value.split('\n').map(x => x.trim()).filter(Boolean);
+    try {
+      await api('admin/control', {
+        method: 'POST',
+        body: {
+          breaking_tag: $('cTag').value.trim(),
+          headline: $('cHeadline').value.trim(),
+          subheadline: $('cSub').value.trim(),
+          ticker,
+        },
+      });
+      toast('Saved');
+    } catch (e) { toast(e.message, true); }
+  });
+
+  /* ══ OVERRIDE ══ */
+  $('setOverrideBtn').addEventListener('click', async () => {
+    const ref = $('oRef').value.trim();
+    if (!ref) { toast('Enter video ID', true); return; }
+    try {
+      await api('admin/override', { method: 'POST', body: { media_ref: ref, title: $('oTitle').value.trim() } });
+      toast('Override active');
+    } catch (e) { toast(e.message, true); }
+  });
+
+  $('clearOverrideBtn').addEventListener('click', async () => {
+    try {
+      await api('admin/override', { method: 'DELETE' });
+      toast('Override cleared');
+    } catch (e) { toast(e.message, true); }
+  });
+
+  /* ══ HELPERS ══ */
+  function escapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function loadAll() {
+    loadSchedule();
+    loadControl();
+  }
+
+  checkStatus();
+})();
+</script>
+</body>
+</html>
