@@ -249,7 +249,6 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
   pointer-events:none;
   z-index:20;
   border-top:1px solid rgba(255,255,255,.06);
-  padding-left:12px;                /* ← text starts AFTER the 6px red bar */
 }
 #fullTicker::before{
   content:"";
@@ -345,5 +344,5 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
   .bn-logo{ font-size:10px; padding:0 10px }
   .bn-ticker-item{ font-size:10px }
   #controlCluster{ left:12px }
-  #fullTicker{ left:12px; padding-left:11px }   /* scaled for mobile: 5px bar + 6px gap */
+  #fullTicker{ left:12px }
 }
