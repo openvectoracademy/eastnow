@@ -1,0 +1,8 @@
+name = "eastnow"
+compatibility_date = "2026-09-01"
+pages_build_output_dir = "public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "eastnow-db"
+database_id = "046c57ec-bc66-4579-be0f-be5586e77c23"
