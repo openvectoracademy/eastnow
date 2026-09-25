@@ -5,6 +5,7 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
   --ticker-h: 24px;
   --botbar-h: 36px;
   --cluster-gap: 0px;
+  --cluster-push: 22px;
 }
 
 #stage{
@@ -24,6 +25,13 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
 }
 @supports not (aspect-ratio:16/9){
   #videoBox{height:56.25vw}
+}
+
+#stage.fullscreen #videoBox{
+  width:100vw;
+  height:100vh;
+  aspect-ratio:auto;
+  max-height:none;
 }
 
 #ytPlayer{
@@ -47,7 +55,7 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
   background:transparent;cursor:pointer;
 }
 
-/* ═══ CONNECTING OVERLAY ═══ */
+/* ── CONNECTING ── */
 #connectOverlay{
   position:absolute;inset:0;z-index:60;
   background:#000;
@@ -69,7 +77,7 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
 .conn-bar{width:180px;height:2px;background:rgba(255,255,255,.06);border-radius:1px;overflow:hidden;margin-top:6px}
 .conn-bar-fill{height:100%;width:0%;background:#1a73e8;transition:width .1s linear}
 
-/* ═══ NETWORK OVERLAY ═══ */
+/* ── NETWORK ── */
 #networkOverlay{
   position:absolute;inset:0;z-index:58;
   background:rgba(0,0,0,.88);
@@ -98,7 +106,7 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
   padding:7px 14px;border-radius:20px;
 }
 
-/* ═══ BUFFER OVERLAY ═══ */
+/* ── BUFFER ── */
 #bufferOverlay{
   position:absolute;inset:0;z-index:55;
   display:none;align-items:center;justify-content:center;
@@ -114,7 +122,7 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
 }
 .buffer-text{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.55)}
 
-/* ═══ PURE BLACK BARS ═══ */
+/* ── PURE BLACK BARS ── */
 #topBar, #botBar{
   position:absolute;left:0;right:0;
   background:#000;
@@ -126,7 +134,7 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
 #botBar{bottom:0;height:var(--botbar-h)}
 #topBar.visible, #botBar.visible{opacity:1}
 
-/* ═══ ALWAYS-ON OVERLAYS ═══ */
+/* ── ALWAYS-ON OVERLAY ── */
 #alwaysOverlay{
   position:absolute;inset:0;z-index:20;
   pointer-events:none;
@@ -134,24 +142,24 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
 
 .always-top{
   position:absolute;top:0;left:0;right:0;
-  height:56px;
+  height:64px;
   display:flex;align-items:center;
-  padding:0 18px;gap:10px;
+  padding:0 20px;gap:12px;
 }
 #brandLogo{
-  width:24px;height:24px;border-radius:50%;
+  width:34px;height:34px;border-radius:50%;
   object-fit:cover;
   flex-shrink:0;
   -webkit-user-drag:none;
   user-select:none;
   pointer-events:none;
 }
-.brand{font-size:12px;font-weight:700;letter-spacing:.06em;color:#fff}
+.brand{font-size:14px;font-weight:700;letter-spacing:.06em;color:#fff}
 .live-badge{
   display:inline-flex;align-items:center;gap:5px;
   background:#d93025;color:#fff;
-  font-size:9px;font-weight:700;letter-spacing:.08em;
-  padding:3px 7px;border-radius:3px;margin-left:4px;
+  font-size:10px;font-weight:700;letter-spacing:.08em;
+  padding:3px 8px;border-radius:3px;margin-left:4px;
 }
 .live-badge::before{
   content:"";width:5px;height:5px;border-radius:50%;
@@ -160,7 +168,7 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 .top-spacer{flex:1}
 .clock{
-  font-size:12px;font-weight:600;
+  font-size:13px;font-weight:600;
   font-variant-numeric:tabular-nums;
   color:rgba(255,255,255,.95);
   letter-spacing:.04em;
@@ -170,11 +178,11 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
 .clock .date-part{color:rgba(255,255,255,.7);display:none;margin-right:8px}
 .clock.show-date .date-part{display:inline}
 
-/* ═══ LOWER-THIRD ═══ */
+/* ── LOWER-THIRD ── */
 #broadcast{
   position:absolute;
   left:18px;
-  bottom: calc(var(--botbar-h) + var(--ticker-h) + var(--cluster-gap));
+  bottom: calc(var(--botbar-h) + var(--ticker-h) + var(--cluster-gap) - var(--cluster-push));
   width:80%;
   max-width:80%;
   filter:drop-shadow(0 6px 20px rgba(0,0,0,.6));
@@ -225,12 +233,12 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
   text-transform:uppercase;flex-shrink:0;
 }
 
-/* ═══ FULL-WIDTH TICKER ═══ */
+/* ── FULL-WIDTH TICKER — left:18px in ALL modes ── */
 #fullTicker{
   position:absolute;
   left:18px;
   right:0;
-  bottom: var(--botbar-h);
+  bottom: calc(var(--botbar-h) - var(--cluster-push));
   height: var(--ticker-h);
   background:rgba(15,15,15,.95);
   overflow:hidden;
@@ -266,7 +274,7 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
   to{transform:translateX(-100%)}
 }
 
-/* ═══ CONTROL CLUSTER ═══ */
+/* ── CONTROL CLUSTER ── */
 #controlCluster{
   position:absolute;
   left:18px;
@@ -320,17 +328,19 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
 .quality-popup-item:hover{background:#f1f3f4}
 .quality-popup-item.active{color:#1a73e8;font-weight:700}
 
-/* ═══ MOBILE TUNING ═══ */
+/* ── MOBILE ── */
 @media (max-width:600px){
-  :root{ --ticker-h: 22px; --botbar-h: 32px; }
-  .brand{font-size:11px}
-  .clock{font-size:11px}
+  :root{ --ticker-h: 22px; --botbar-h: 32px; --cluster-push: 14px; }
+  #brandLogo{width:30px;height:30px}
+  .brand{font-size:13px}
+  .clock{font-size:12px}
   #broadcast{ width:86%; left:12px }
   .bn-headline{ font-size:12px }
   .bn-now{ font-size:12px }
   .bn-badge{ font-size:10px; padding:4px 10px 3px }
   .bn-logo{ font-size:10px; padding:0 10px }
   .bn-ticker-item{ font-size:10px }
-  .always-top{ padding:0 12px }
+  .always-top{ padding:0 14px; height:56px }
   #controlCluster{ left:12px }
+  #fullTicker{ left:12px }
 }
