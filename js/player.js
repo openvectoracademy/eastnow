@@ -1,22 +1,13 @@
-/* EAST NOW — Player logic
-   - Joins the ongoing 24/7 loop
-   - Handles YouTube + image schedule items
-   - Persistent overlays (headline, ticker, logo, clock)
-   - Pause/seek disabled
-   - Network lock + buffering handling
-   - Local next-video timer (no network wait)
-*/
 (() => {
   'use strict';
 
-  /* ── CONFIG ── */
   const LIVE_POLL_MS         = 4000;
-  const CONNECT_HIDE_MS      = 2000;   // 2s after real playback
-  const BARS_VISIBLE_MS      = 5000;   // 5s after play / after buffer clears
+  const CONNECT_HIDE_MS      = 2000;
+  const BARS_VISIBLE_MS      = 5000;
   const CTRL_VISIBLE_MS      = 5000;
-  const POOR_NETWORK_MS      = 15000;  // buffering this long → poor network
+  const POOR_NETWORK_MS      = 15000;
   const OFFLINE_RECHECK_MS   = 1500;
-  const DATE_SHOW_MS         = 5 * 60 * 1000;  // 5 minutes
+
   const STATE = {
     scheduleState: null,
     lastRevision: -1,
@@ -31,15 +22,14 @@
     offlineWatch: null,
     videoStarted: false,
     networkLocked: false,
-    lastDateShownKey: '',
     playerReady: false,
-    currentMediaType: null,   // 'youtube' | 'image'
-    currentImageEl: null,
+    currentMediaType: null,
+    player: null,
   };
 
-  /* ── DOM ── */
   const $ = id => document.getElementById(id);
   const el = {
+    stage: $('stage'),
     topBar: $('topBar'), botBar: $('botBar'),
     connect: $('connectOverlay'), connText: $('connText'), connFill: $('connFill'),
     network: $('networkOverlay'), netMsg: $('netMsg'), netPill: $('netPill'),
@@ -51,11 +41,10 @@
     muteBtn: $('muteBtn'), qualityBtn: $('qualityBtn'),
     qualityPopup: $('qualityPopup'), fsBtn: $('fsBtn'),
     shield: $('shield'), imageMedia: $('imageMedia'),
+    videoBox: $('videoBox'),
   };
 
-  /* ═══════════════════════════════════════════════════════
-     CLOCK — HH:MM AM/PM every second; date for 5 min each hour
-     ═══════════════════════════════════════════════════════ */
+  /* ── CLOCK ── */
   function renderClock() {
     const n = new Date();
     let h = n.getHours();
@@ -63,11 +52,8 @@
     const ampm = h >= 12 ? 'PM' : 'AM';
     h = h % 12; if (h === 0) h = 12;
     const hh = String(h).padStart(2, '0');
-
     const timeStr = `${hh}:${m} ${ampm}`;
-    const minutes = n.getMinutes();
-    const showDate = minutes < 5;   // 5 min window at the top of every hour
-
+    const showDate = n.getMinutes() < 5;
     const day   = String(n.getDate()).padStart(2, '0');
     const month = n.toLocaleString('en-US', { month: 'short' });
     const year  = n.getFullYear();
@@ -84,21 +70,18 @@
   renderClock();
   setInterval(renderClock, 1000);
 
-  /* ═══════════════════════════════════════════════════════
-     LIVE POLL — overlays + revision watch
-     ═══════════════════════════════════════════════════════ */
+  /* ── LIVE POLL ── */
   async function pollLive() {
     try {
       const r = await fetch('/api/live', { cache: 'no-store' });
       if (!r.ok) return;
       const d = await r.json();
       applyLive(d);
-
       if (d.revision !== STATE.lastRevision) {
         STATE.lastRevision = d.revision;
         await refreshScheduleState();
       }
-    } catch (_) { /* network issue — ignore */ }
+    } catch (_) {}
   }
 
   function applyLive(d) {
@@ -107,7 +90,6 @@
     if (d.subheadline != null)  el.bnLogo.textContent = d.subheadline || 'EAST NOW';
     if (Array.isArray(d.ticker)) buildTicker(d.ticker);
     if (d.override_video_id) {
-      // Override — play immediately
       if (STATE.scheduleState?.override?.media_ref !== d.override_video_id) {
         playOverride(d.override_video_id);
       }
@@ -129,9 +111,7 @@
     });
   }
 
-  /* ═══════════════════════════════════════════════════════
-     SCHEDULE STATE
-     ═══════════════════════════════════════════════════════ */
+  /* ── SCHEDULE STATE ── */
   async function refreshScheduleState() {
     try {
       const r = await fetch('/api/schedule-state', { cache: 'no-store' });
@@ -142,9 +122,7 @@
     } catch (_) {}
   }
 
-  /* ═══════════════════════════════════════════════════════
-     PLAYBACK — dispatch on media type
-     ═══════════════════════════════════════════════════════ */
+  /* ── PLAYBACK ── */
   function playCurrent(cur) {
     if (!cur) return;
     if (cur.type === 'image') {
@@ -155,7 +133,6 @@
   }
 
   function playOverride(mediaRef) {
-    // Override is always a YouTube video (kept simple)
     clearTimers();
     playYouTube(mediaRef, 0, null);
   }
@@ -167,7 +144,6 @@
     STATE.imageTimer = null;
   }
 
-  /* ── YOUTUBE ── */
   function ensurePlayer() {
     if (STATE.player || !window.YT || !YT.Player) return STATE.player;
     STATE.player = new YT.Player('ytPlayer', {
@@ -200,7 +176,6 @@
         p.loadVideoById({ videoId, startSeconds: Math.max(0, offsetSeconds | 0) });
         p.playVideo();
       } catch (_) {}
-
       if (remainingSeconds) {
         clearTimeout(STATE.nextSwapTimer);
         STATE.nextSwapTimer = setTimeout(advanceToNext, remainingSeconds * 1000);
@@ -209,7 +184,6 @@
     go();
   }
 
-  /* ── IMAGE ── */
   function playImage(src, remainingSeconds) {
     clearTimers();
     STATE.currentMediaType = 'image';
@@ -217,8 +191,6 @@
 
     el.imageMedia.src = src;
     el.imageMedia.classList.add('active');
-
-    // Bars for 5s on every swap
     showBars(BARS_VISIBLE_MS);
 
     clearTimeout(STATE.imageTimer);
@@ -227,31 +199,21 @@
     }
   }
 
-  /* ═══════════════════════════════════════════════════════
-     ADVANCE — called by local timers + YT ENDED
-     ═══════════════════════════════════════════════════════ */
   function advanceToNext() {
     const s = STATE.scheduleState;
     if (!s || !s.next) return;
-    // Load next immediately
     if (s.next.type === 'image') {
       playImage(s.next.mediaRef, s.next.durationSeconds);
     } else {
       playYouTube(s.next.mediaRef, 0, s.next.durationSeconds);
     }
-    // Refresh state soon after (server recalculates next)
     setTimeout(refreshScheduleState, 800);
   }
 
-  /* ═══════════════════════════════════════════════════════
-     YT STATE
-     ═══════════════════════════════════════════════════════ */
   function onYTState(e) {
-    // 1 = PLAYING
     if (e.data === 1) {
       clearTimeout(STATE.bufferWatch);
       STATE.bufferStart = 0;
-
       if (!STATE.videoStarted) {
         STATE.videoStarted = true;
         clearTimeout(STATE.connectHideTimer);
@@ -266,11 +228,9 @@
       }
       syncMuteUI();
     }
-    // 2 = PAUSED — force resume
     if (e.data === 2) {
       setTimeout(() => { try { STATE.player.playVideo(); } catch(_) {} }, 60);
     }
-    // 3 = BUFFERING
     if (e.data === 3) {
       if (STATE.videoStarted) {
         el.buffer.classList.add('active');
@@ -285,13 +245,10 @@
         }
       }
     }
-    // 0 = ENDED — safety net
     if (e.data === 0) advanceToNext();
   }
 
-  /* ═══════════════════════════════════════════════════════
-     BARS — pure black top + bottom, 5s visibility
-     ═══════════════════════════════════════════════════════ */
+  /* ── BARS ── */
   function showBars(autoHideMs) {
     el.topBar.classList.add('visible');
     el.botBar.classList.add('visible');
@@ -307,9 +264,7 @@
     el.botBar.classList.remove('visible');
   }
 
-  /* ═══════════════════════════════════════════════════════
-     CONTROL CLUSTER
-     ═══════════════════════════════════════════════════════ */
+  /* ── CONTROL CLUSTER ── */
   function showControls() {
     el.cluster.classList.add('visible');
     clearTimeout(STATE.ctrlTimer);
@@ -320,9 +275,7 @@
     el.qualityPopup.classList.remove('open');
   }
 
-  /* ═══════════════════════════════════════════════════════
-     NETWORK LOCK
-     ═══════════════════════════════════════════════════════ */
+  /* ── NETWORK LOCK ── */
   function enterNetworkLock(reason) {
     if (STATE.networkLocked) return;
     STATE.networkLocked = true;
@@ -390,9 +343,7 @@
       .catch(() => {});
   });
 
-  /* ═══════════════════════════════════════════════════════
-     MUTE
-     ═══════════════════════════════════════════════════════ */
+  /* ── MUTE ── */
   function syncMuteUI() {
     const p = STATE.player;
     if (!p || typeof p.isMuted !== 'function') return;
@@ -414,9 +365,7 @@
     showControls();
   });
 
-  /* ═══════════════════════════════════════════════════════
-     QUALITY
-     ═══════════════════════════════════════════════════════ */
+  /* ── QUALITY ── */
   const QUALITY_LABELS = {
     highres: '4K', hd2160: '2160p', hd1440: '1440p', hd1080: '1080p',
     hd720: '720p', large: '480p', medium: '360p', small: '240p', tiny: '144p',
@@ -463,23 +412,26 @@
     if (!e.target.closest('#controlCluster')) el.qualityPopup.classList.remove('open');
   });
 
-  /* ═══════════════════════════════════════════════════════
-     FULLSCREEN
-     ═══════════════════════════════════════════════════════ */
+  /* ── FULLSCREEN (with .fullscreen class toggle) ── */
   el.fsBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    const box = document.getElementById('videoBox');
     if (!document.fullscreenElement) {
-      box.requestFullscreen?.().catch(() => {});
+      el.stage.requestFullscreen?.().catch(() => {});
     } else {
       document.exitFullscreen?.();
     }
     showControls();
   });
 
-  /* ═══════════════════════════════════════════════════════
-     BLOCK PAUSE / SEEK
-     ═══════════════════════════════════════════════════════ */
+  document.addEventListener('fullscreenchange', () => {
+    if (document.fullscreenElement) {
+      el.stage.classList.add('fullscreen');
+    } else {
+      el.stage.classList.remove('fullscreen');
+    }
+  });
+
+  /* ── BLOCK PAUSE / SEEK ── */
   document.addEventListener('keydown', (e) => {
     if (['Space','ArrowLeft','ArrowRight','KeyK','KeyJ','KeyL'].includes(e.code)) {
       e.preventDefault(); e.stopPropagation();
@@ -492,14 +444,9 @@
   });
   el.shield.addEventListener('contextmenu', e => e.preventDefault());
 
-  /* ═══════════════════════════════════════════════════════
-     BOOT
-     ═══════════════════════════════════════════════════════ */
+  /* ── BOOT ── */
   function boot() {
-    // Start with a graceful connecting state
     el.connect.classList.remove('hidden');
-
-    // YouTube player API is loaded in HTML — wait for it
     const waitYT = () => {
       if (window.YT && window.YT.Player) {
         ensurePlayer();
