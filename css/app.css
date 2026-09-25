@@ -231,7 +231,7 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
   padding:0 14px;background:#111;color:#fff;
   font-size:11px;font-weight:900;letter-spacing:.14em;
   text-transform:uppercase;flex-shrink:0;
-  border-left:6px solid #D32F2F;   /* ← NEW: red bar on sub-headline, matching headline */
+  border-left:6px solid #D32F2F;
 }
 
 /* ── FULL-WIDTH TICKER ── */
@@ -253,7 +253,8 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
 #fullTicker::before{
   content:"";
   position:absolute;left:0;top:0;bottom:0;
-  width:3px;background:#D32F2F;
+  width:6px;                    /* ← 6px to match headline + sub-headline */
+  background:#D32F2F;
 }
 .bn-ticker-track{
   display:inline-flex;
