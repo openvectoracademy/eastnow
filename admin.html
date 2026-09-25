@@ -110,7 +110,29 @@
   .item .info{min-width:0}
   .item .info .t{font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .item .info .m{font-size:11px;color:#9aa0a6;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .item .actions{display:flex;gap:6px}
+  .item .actions{display:flex;gap:6px;align-items:center}
+
+  /* REORDER BUTTONS */
+  .reorder{
+    display:flex;flex-direction:column;gap:2px;
+  }
+  .reorder button{
+    width:26px;height:18px;
+    background:#1a1a1a;border:1px solid #2a2a2a;color:#e8eaed;
+    border-radius:3px;font-size:10px;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .12s, border-color .12s;
+    padding:0;
+  }
+  .reorder button:hover:not(:disabled){
+    background:#1a73e8;border-color:#1a73e8;
+  }
+  .reorder button:disabled{
+    opacity:.3;cursor:not-allowed;
+  }
+  .reorder button svg{
+    width:10px;height:10px;
+  }
 
   .empty{padding:40px 20px;text-align:center;color:#9aa0a6;font-size:13px}
 
@@ -124,6 +146,13 @@
   }
   .toast.show{opacity:1;transform:translate(-50%, 0)}
   .toast.err{background:#d93025}
+
+  @media(max-width:600px){
+    .item{grid-template-columns:32px 1fr;gap:10px;padding:12px}
+    .item .actions{grid-column:1 / -1;justify-content:flex-end;margin-top:6px}
+    .reorder{flex-direction:row}
+    .reorder button{width:32px;height:22px}
+  }
 </style>
 </head>
 <body>
@@ -236,6 +265,7 @@
   'use strict';
   const $ = id => document.getElementById(id);
   let TOKEN = sessionStorage.getItem('eastnow_admin_token') || '';
+  let currentItems = [];
 
   function toast(msg, isErr) {
     const t = $('toast');
@@ -269,7 +299,7 @@
       if (d.setupRequired) { showSetup(); return; }
       if (TOKEN) {
         try {
-          await api('admin/schedule');  // verify token works
+          await api('admin/schedule');
           showMain();
           loadAll();
           return;
@@ -344,38 +374,61 @@
     list.innerHTML = '<div class="empty">Loading…</div>';
     try {
       const d = await api('admin/schedule');
-      if (!d.items || !d.items.length) {
+      currentItems = d.items || [];
+      if (!currentItems.length) {
         list.innerHTML = '<div class="empty">No items yet. Add your first video above.</div>';
         return;
       }
       list.innerHTML = '';
-      d.items.forEach(it => {
+      currentItems.forEach((it, i) => {
         const row = document.createElement('div');
         row.className = 'item';
-        const ref = it.type === 'image' ? it.media_ref : it.media_ref;
+
+        const isFirst = i === 0;
+        const isLast  = i === currentItems.length - 1;
+
         row.innerHTML = `
           <div class="ord">${it.order_index}</div>
           <div class="info">
             <div class="t">${escapeHtml(it.title)}</div>
-            <div class="m">${it.type.toUpperCase()} • ${escapeHtml(ref)} • ${it.duration_seconds}s • ${escapeHtml(it.show_tag || '')}</div>
+            <div class="m">${it.type.toUpperCase()} • ${escapeHtml(it.media_ref)} • ${it.duration_seconds}s • ${escapeHtml(it.show_tag || '')}</div>
           </div>
           <div class="actions">
+            <div class="reorder">
+              <button data-act="up" data-id="${it.id}" ${isFirst ? 'disabled' : ''} title="Move up" aria-label="Move up">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 15 12 9 18 15"/>
+                </svg>
+              </button>
+              <button data-act="down" data-id="${it.id}" ${isLast ? 'disabled' : ''} title="Move down" aria-label="Move down">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </button>
+            </div>
             <button class="ghost" data-act="edit" data-id="${it.id}">Edit</button>
             <button class="danger" data-act="del" data-id="${it.id}">Delete</button>
           </div>
         `;
         list.appendChild(row);
       });
+
+      /* ── Delete ── */
       list.querySelectorAll('[data-act="del"]').forEach(b => {
         b.addEventListener('click', async () => {
           if (!confirm('Delete this item?')) return;
-          try { await api('admin/schedule/' + b.dataset.id, { method: 'DELETE' }); toast('Deleted'); loadSchedule(); }
-          catch (e) { toast(e.message, true); }
+          try {
+            await api('admin/schedule/' + b.dataset.id, { method: 'DELETE' });
+            toast('Deleted');
+            loadSchedule();
+          } catch (e) { toast(e.message, true); }
         });
       });
+
+      /* ── Edit ── */
       list.querySelectorAll('[data-act="edit"]').forEach(b => {
         b.addEventListener('click', () => {
-          const it = d.items.find(x => String(x.id) === String(b.dataset.id));
+          const it = currentItems.find(x => String(x.id) === String(b.dataset.id));
           if (!it) return;
           $('sType').value = it.type;
           $('sRef').value = it.media_ref;
@@ -388,8 +441,153 @@
           window.scrollTo({ top: 0, behavior: 'smooth' });
         });
       });
+
+      /* ── Reorder (up / down) ── */
+      list.querySelectorAll('[data-act="up"], [data-act="down"]').forEach(b => {
+        b.addEventListener('click', async () => {
+          const id = b.dataset.id;
+          const idx = currentItems.findIndex(x => String(x.id) === String(id));
+          if (idx < 0) return;
+
+          const dir = b.dataset.act === 'up' ? -1 : 1;
+          const targetIdx = idx + dir;
+          if (targetIdx < 0 || targetIdx >= currentItems.length) return;
+
+          // Swap in local list
+          const a = currentItems[idx];
+          const bb = currentItems[targetIdx];
+          const tmpOrder = a.order_index;
+          a.order_index = bb.order_index;
+          bb.order_index = tmpOrder;
+
+          // Optimistic re-render so the UI feels instant
+          currentItems.sort((x, y) => x.order_index - y.order_index);
+          renderList();
+
+          // Persist to backend — only the two affected rows
+          try {
+            await api('admin/reorder', {
+              method: 'POST',
+              body: {
+                items: [
+                  { id: a.id,  order_index: a.order_index },
+                  { id: bb.id, order_index: bb.order_index },
+                ],
+              },
+            });
+            toast('Reordered');
+            // Refresh to catch any server-side normalisation
+            loadSchedule();
+          } catch (e) {
+            toast(e.message, true);
+            loadSchedule();  // revert by reloading truth
+          }
+        });
+      });
     } catch (e) {
       list.innerHTML = '<div class="empty">Error: ' + escapeHtml(e.message) + '</div>';
+    }
+  }
+
+  /* Re-render the list without a fresh network call — used for optimistic reorder */
+  function renderList() {
+    const list = $('scheduleList');
+    list.innerHTML = '';
+    currentItems.forEach((it, i) => {
+      const row = document.createElement('div');
+      row.className = 'item';
+      const isFirst = i === 0;
+      const isLast  = i === currentItems.length - 1;
+      row.innerHTML = `
+        <div class="ord">${it.order_index}</div>
+        <div class="info">
+          <div class="t">${escapeHtml(it.title)}</div>
+          <div class="m">${it.type.toUpperCase()} • ${escapeHtml(it.media_ref)} • ${it.duration_seconds}s • ${escapeHtml(it.show_tag || '')}</div>
+        </div>
+        <div class="actions">
+          <div class="reorder">
+            <button data-act="up" data-id="${it.id}" ${isFirst ? 'disabled' : ''} title="Move up" aria-label="Move up">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 15 12 9 18 15"/>
+              </svg>
+            </button>
+            <button data-act="down" data-id="${it.id}" ${isLast ? 'disabled' : ''} title="Move down" aria-label="Move down">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+          </div>
+          <button class="ghost" data-act="edit" data-id="${it.id}">Edit</button>
+          <button class="danger" data-act="del" data-id="${it.id}">Delete</button>
+        </div>
+      `;
+      list.appendChild(row);
+    });
+
+    // Rebind all handlers
+    list.querySelectorAll('[data-act="del"]').forEach(b => {
+      b.addEventListener('click', async () => {
+        if (!confirm('Delete this item?')) return;
+        try {
+          await api('admin/schedule/' + b.dataset.id, { method: 'DELETE' });
+          toast('Deleted');
+          loadSchedule();
+        } catch (e) { toast(e.message, true); }
+      });
+    });
+    list.querySelectorAll('[data-act="edit"]').forEach(b => {
+      b.addEventListener('click', () => {
+        const it = currentItems.find(x => String(x.id) === String(b.dataset.id));
+        if (!it) return;
+        $('sType').value = it.type;
+        $('sRef').value = it.media_ref;
+        $('sTitle').value = it.title;
+        $('sSource').value = it.source;
+        $('sTag').value = it.show_tag;
+        $('sDur').value = it.duration_seconds;
+        $('addBtn').textContent = 'Save changes';
+        $('addBtn').dataset.editId = it.id;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+    list.querySelectorAll('[data-act="up"], [data-act="down"]').forEach(b => {
+      b.addEventListener('click', () => handleReorderClick(b));
+    });
+  }
+
+  async function handleReorderClick(b) {
+    const id = b.dataset.id;
+    const idx = currentItems.findIndex(x => String(x.id) === String(id));
+    if (idx < 0) return;
+
+    const dir = b.dataset.act === 'up' ? -1 : 1;
+    const targetIdx = idx + dir;
+    if (targetIdx < 0 || targetIdx >= currentItems.length) return;
+
+    const a  = currentItems[idx];
+    const bb = currentItems[targetIdx];
+    const tmp = a.order_index;
+    a.order_index = bb.order_index;
+    bb.order_index = tmp;
+
+    currentItems.sort((x, y) => x.order_index - y.order_index);
+    renderList();
+
+    try {
+      await api('admin/reorder', {
+        method: 'POST',
+        body: {
+          items: [
+            { id: a.id,  order_index: a.order_index },
+            { id: bb.id, order_index: bb.order_index },
+          ],
+        },
+      });
+      toast('Reordered');
+      loadSchedule();
+    } catch (e) {
+      toast(e.message, true);
+      loadSchedule();
     }
   }
 
