@@ -258,7 +258,7 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Roboto','Helv
 }
 .bn-ticker-track{
   display:inline-flex;
-  animation:bnScroll 40s linear infinite;
+  animation:bnScroll 70s linear infinite;
   padding-left:100%;
   will-change:transform;
 }
