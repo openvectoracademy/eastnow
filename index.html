@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#000000" />
+<title>EAST NOW — Live</title>
+<link rel="icon" href="images/eastnow.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+
+<div id="stage">
+  <div id="videoBox">
+    <div id="ytPlayer"></div>
+    <img id="imageMedia" alt="" draggable="false" />
+
+    <div id="shield"></div>
+
+    <!-- CONNECTING OVERLAY -->
+    <div id="connectOverlay">
+      <div class="conn-spinner"></div>
+      <div class="conn-text" id="connText">Connecting to our channel…</div>
+      <div class="conn-bar"><div class="conn-bar-fill" id="connFill"></div></div>
+      <div class="conn-sub">EAST NOW</div>
+    </div>
+
+    <!-- NETWORK WARNING OVERLAY -->
+    <div id="networkOverlay">
+      <div class="net-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 1l22 22"/>
+          <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
+          <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+          <path d="M10.71 5.05A16 16 0 0 1 22.58 9"/>
+          <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+          <line x1="12" y1="20" x2="12.01" y2="20"/>
+        </svg>
+      </div>
+      <div class="net-title">No Connection</div>
+      <div class="net-msg" id="netMsg">We've lost connection to the stream. Please check your mobile data or Wi-Fi and try again.</div>
+      <div class="net-pill" id="netPill">Waiting for network…</div>
+    </div>
+
+    <!-- BUFFER OVERLAY -->
+    <div id="bufferOverlay">
+      <div class="buffer-spinner"></div>
+      <div class="buffer-text">Buffering…</div>
+    </div>
+
+    <!-- PURE BLACK BARS -->
+    <div id="topBar"></div>
+    <div id="botBar"></div>
+
+    <!-- ALWAYS-ON OVERLAYS -->
+    <div id="alwaysOverlay">
+      <div class="always-top">
+        <img id="brandLogo" src="images/eastnow.png" alt="EAST NOW" draggable="false" />
+        <span class="brand">EAST NOW</span>
+        <span class="live-badge">LIVE</span>
+        <div class="top-spacer"></div>
+        <span class="clock" id="clock">--:-- --</span>
+      </div>
+
+      <div id="broadcast">
+        <div class="bn-badge" id="bnBadge">BREAKING NEWS</div>
+
+        <div class="bn-main">
+          <div class="bn-text">
+            <span class="bn-now">NOW:</span>
+            <span class="bn-headline" id="bnHeadline">EAST NOW brings you continuous coverage around the clock</span>
+          </div>
+          <div class="bn-logo" id="bnLogo">EAST NOW</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FULL-WIDTH TICKER -->
+    <div id="fullTicker">
+      <div class="bn-ticker-track" id="bnTickerTrack"></div>
+    </div>
+
+    <!-- CONTROL CLUSTER -->
+    <div id="controlCluster">
+      <button class="ctrl-ic muted" id="muteBtn" aria-label="Toggle sound">
+        <svg class="icon-unmuted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+        </svg>
+        <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <line x1="23" y1="9" x2="17" y2="15"/>
+          <line x1="17" y1="9" x2="23" y2="15"/>
+        </svg>
+      </button>
+
+      <button class="quality-btn" id="qualityBtn">Auto</button>
+
+      <button class="ctrl-ic" id="fsBtn" title="Fullscreen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 3 21 3 21 9"/>
+          <polyline points="9 21 3 21 3 15"/>
+          <line x1="21" y1="3" x2="14" y2="10"/>
+          <line x1="3" y1="21" x2="10" y2="14"/>
+        </svg>
+      </button>
+
+      <div class="quality-popup" id="qualityPopup"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script src="js/player.js"></script>
+</body>
+</html>
